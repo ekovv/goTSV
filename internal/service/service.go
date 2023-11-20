@@ -3,6 +3,7 @@ package service
 import (
 	"encoding/csv"
 	"fmt"
+	"github.com/signintech/gopdf"
 	"goTSV/internal/shema"
 	"goTSV/internal/storage"
 	"goTSV/internal/watcher"
@@ -100,5 +101,19 @@ func (s *Service) ParseFile(fileName string) ([]shema.Tsv, []string, error) {
 }
 
 func (s *Service) WritePDF(tsv []shema.Tsv, unitGuid []string) error {
-
+	for _, v := range unitGuid {
+		pdf := gopdf.GoPdf{}
+		pdf.Start(gopdf.Config{PageSize: *gopdf.PageSizeA4})
+		pdf.AddPage()
+		err := pdf.AddTTFFont("LiberationSerif-Regular", "resources/LiberationSerif-Regular.ttf")
+		if err != nil {
+			return fmt.Errorf("bad adding font: %w", err)
+		}
+		err = pdf.SetFont("LiberationSerif-Regular", "", 14)
+		if err != nil {
+			return fmt.Errorf("bad setting font: %w", err)
+		}
+		pdf.Cell(nil, "您好")
+		pdf.WritePdf("hello.pdf")
+	}
 }
