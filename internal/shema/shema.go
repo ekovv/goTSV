@@ -20,5 +20,5 @@ type Tsv struct {
 
 type Files struct {
 	File string
-	Err  string
+	Err  error
 }
