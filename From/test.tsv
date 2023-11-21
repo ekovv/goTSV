@@ -1,0 +1,22 @@
+
+
+#номер	mqtt	инвентарный	гуид	id сообщения	текст сообщения	среда	классс сообщения[alarm.warning,info,event,comand]	уровень сообщения [int]	Зона переменных HR,IR.I,C	адрес переменной в контроллерей	использовать как начало блока	тип	номер бита в регистре	
+n 	mqtt	invid   	unit_guid                           	msg_id                   	text               	context	class  	level	area 	addr                                 	block	type	bit	invert_bit
+1 	    	G-044322	01749246-95f6-57db-b7c3-2ae0e8be671f	cold7_Defrost_status     	Разморозка         	       	waiting	100  	LOCAL	cold7_status.Defrost_status				
+2 	    	G-044322	01749246-95f6-57db-b7c3-2ae0e8be671f	cold7_VentSK_status      	Вентилятор         	       	working	100  	LOCAL	cold7_status.VentSK_status				
+3 	    	G-044322	01749246-95f6-57db-b7c3-2ae0e8be671f	cold7_ComprSK_status     	Компрессор         	       	working	100  	LOCAL	cold7_status.ComprSK_status				
+4 	    	G-044322	01749246-95f6-57db-b7c3-2ae0e8be671f	cold7_Temp_Al_HH         	Высокая температура	       	alarm  	100  	LOCAL	cold7_status.Temp_Al_HH				
+5 	    	G-044325	01749246-9617-585e-9e19-157ccad61ee2	cold78_Defrost_status    	Разморозка         	       	waiting	100  	LOCAL	cold78_status.Defrost_status				
+6 	    	G-044325	01749246-9617-585e-9e19-157ccad61ee2	cold78_VentSK_status     	Вентилятор         	       	working	100  	LOCAL	cold78_status.VentSK_status				
+7 	    	G-044325	01749246-9617-585e-9e19-157ccad61ee2	cold78_ComprSK_status    	Компрессор         	       	working	100  	LOCAL	cold78_status.ComprSK_status				
+8 	    	G-044325	01749246-9617-585e-9e19-157ccad61ee2	cold78_Temp_Al_HH        	Высокая температура	       	alarm  	100  	LOCAL	cold78_status.Temp_Al_HH				
+9 	    	G-044324	01749246-960c-5832-b2aa-ed2b4da5e137	cold2282a_LTempAir_Al_HH 	Высокая температура	       	alarm  	100  	LOCAL	cold2282a_left_status.TempAir_Al_HH				
+10	    	G-044324	01749246-960c-5832-b2aa-ed2b4da5e137	cold2282a_LCold_Status   	Охлаждение         	       	working	100  	LOCAL	cold2282a_left_status.Cold_Status				
+11	    	G-044324	01749246-960c-5832-b2aa-ed2b4da5e137	cold2282a_LVentSK_status 	Вентилятор         	       	working	100  	LOCAL	cold2282a_left_status.VentSK_status				
+12	    	G-044324	01749246-960c-5832-b2aa-ed2b4da5e137	cold2282a_LDefrost_status	Разморозка         	       	waiting	100  	LOCAL	cold2282a_left_status.Defrost_status				
+13	    	G-044324	01749246-960c-5832-b2aa-ed2b4da5e137	cold2282a_RTempAir_Al_HH 	Высокая температура	       	alarm  	100  	LOCAL	cold2282a_right_status.TempAir_Al_HH				
+14	    	G-044324	01749246-960c-5832-b2aa-ed2b4da5e137	cold2282a_RCold_Status   	Охлаждение         	       	working	100  	LOCAL	cold2282a_right_status.Cold_Status				
+15	    	G-044324	01749246-960c-5832-b2aa-ed2b4da5e137	cold2282a_RVentSK_status 	Вентилятор         	       	working	100  	LOCAL	cold2282a_right_status.VentSK_status				
+16	    	G-044322	01749246-95f6-57db-b7c3-2ae0e8be671f	test_alarm                                	Тест Аларм                                        	       	alarm  	100  	LOCAL	TestingForMsg.Alarm				
+16	    	G-044322	01749246-95f6-57db-b7c3-2ae0e8be671f	test_warning                              	Тест Варнинг                                      	       	warning	100  	LOCAL	TestingForMsg.Warning				
+16	    	G-044322	01749246-95f6-57db-b7c3-2ae0e8be671f	test_work                                 	Тест Ворк                                         	       	working	100  	LOCAL	TestingForMsg.Work				
