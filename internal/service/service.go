@@ -8,9 +8,7 @@ import (
 	"goTSV/internal/shema"
 	"goTSV/internal/storage"
 	"goTSV/internal/watcher"
-	"io"
 	"log"
-	"net/http"
 	"os"
 	"strings"
 )
@@ -26,7 +24,8 @@ func NewService(storage storage.DBStorage, watcher *watcher.Watcher, config conf
 }
 
 func (s *Service) Scanner() error {
-	out := s.watcher.Scan()
+	out := make(chan string)
+	go s.watcher.Scan(out)
 	for file := range out {
 		tsv, unitGuid, err := s.ParseFile(file)
 		if err != nil {
@@ -63,7 +62,7 @@ func (s *Service) Scanner() error {
 }
 
 func (s *Service) ParseFile(fileName string) ([]shema.Tsv, []string, error) {
-	file, err := os.Open(fileName)
+	file, err := os.Open(s.config.DirectoryFrom + "/" + fileName)
 	if err != nil {
 		return nil, nil, fmt.Errorf("error opening: %w", err)
 	}
@@ -80,17 +79,29 @@ func (s *Service) ParseFile(fileName string) ([]shema.Tsv, []string, error) {
 	var array []string
 	for {
 		str, err := reader.Read()
+		if str == nil {
+			break
+		}
 		if err != nil {
 			log.Fatal(err)
 		}
-		for _, s := range array {
-			if s == strings.TrimSpace(str[3]) {
+	loop:
+		for _, s := range data {
+			if s.UnitGUID == strings.TrimSpace(str[3]) {
 				break
 			} else {
+				for _, guid := range array {
+					if s.UnitGUID == guid || guid == strings.TrimSpace(str[3]) {
+						continue loop
+					}
+				}
 				array = append(array, strings.TrimSpace(str[3]))
 			}
 		}
 
+		if str[0] == "n" || str[0] == "номер" {
+			continue
+		}
 		t := shema.Tsv{
 			Number:       strings.TrimSpace(str[0]),
 			MQTT:         strings.TrimSpace(str[1]),
@@ -110,6 +121,7 @@ func (s *Service) ParseFile(fileName string) ([]shema.Tsv, []string, error) {
 		}
 		data = append(data, t)
 	}
+	fmt.Println("dddd")
 	return data, array, nil
 }
 
@@ -119,19 +131,14 @@ func (s *Service) WritePDF(tsv []shema.Tsv, unitGuid []string) error {
 		pdf.Start(gopdf.Config{PageSize: *gopdf.PageSizeA4})
 		pdf.AddPage()
 
-		fontUrl := "https://github.com/google/fonts/blob/main/ofl/actor/Actor-Regular.ttf"
-		if err := DownloadFile("Actor-Regular.ttf", fontUrl); err != nil {
-			return fmt.Errorf("don't download font: %w", err)
+		err := pdf.AddTTFFont("SANS-SERIF", "resources/Actor-Regular.ttf")
+		if err != nil {
+			return err
 		}
 
-		err := pdf.AddTTFFont("Actor-Regular", "Actor-Regular.ttf")
+		err = pdf.SetFont("SANS-SERIF", "", 14)
 		if err != nil {
-			return fmt.Errorf("don't add font: %w", err)
-		}
-
-		err = pdf.SetFont("Actor-Regular", "", 20)
-		if err != nil {
-			return fmt.Errorf("don't set font: %w", err)
+			return err
 		}
 
 		for _, t := range tsv {
@@ -161,7 +168,7 @@ func (s *Service) WritePDF(tsv []shema.Tsv, unitGuid []string) error {
 				}
 			}
 		}
-		resultFile := s.config.DirectoryTo + guid + ".pdf"
+		resultFile := s.config.DirectoryTo + "/" + guid + ".pdf"
 		err = pdf.WritePdf(resultFile)
 		if err != nil {
 			return fmt.Errorf("can't write pdf: %w", err)
@@ -169,22 +176,4 @@ func (s *Service) WritePDF(tsv []shema.Tsv, unitGuid []string) error {
 
 	}
 	return nil
-}
-
-func DownloadFile(filepath string, url string) error {
-	resp, err := http.Get(url)
-	if err != nil {
-		return err
-	}
-
-	defer resp.Body.Close()
-	out, err := os.Create(filepath)
-	if err != nil {
-		return err
-	}
-
-	defer out.Close()
-
-	_, err = io.Copy(out, resp.Body)
-	return err
 }

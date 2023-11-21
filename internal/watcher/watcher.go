@@ -20,9 +20,8 @@ type Watcher struct {
 	files   map[string]bool
 }
 
-func (s *Watcher) Scan() chan string {
+func (s *Watcher) Scan(out chan string) {
 	var wg sync.WaitGroup
-	out := make(chan string, 100)
 	go func() {
 		timer := time.NewTicker(time.Duration(s.timer) * time.Second)
 
@@ -56,6 +55,5 @@ func (s *Watcher) Scan() chan string {
 			time.Sleep(10 * time.Second)
 		}
 	}()
-	return out
 
 }
