@@ -4,10 +4,13 @@ import (
 	"encoding/csv"
 	"fmt"
 	"github.com/signintech/gopdf"
+	"goTSV/config"
 	"goTSV/internal/shema"
 	"goTSV/internal/storage"
 	"goTSV/internal/watcher"
+	"io"
 	"log"
+	"net/http"
 	"os"
 	"strings"
 )
@@ -15,10 +18,11 @@ import (
 type Service struct {
 	storage storage.DBStorage
 	watcher *watcher.Watcher
+	config  config.Config
 }
 
-func NewService(storage storage.DBStorage, watcher *watcher.Watcher) *Service {
-	return &Service{storage: storage, watcher: watcher}
+func NewService(storage storage.DBStorage, watcher *watcher.Watcher, config config.Config) *Service {
+	return &Service{storage: storage, watcher: watcher, config: config}
 }
 
 func (s *Service) Scanner() error {
@@ -49,8 +53,13 @@ func (s *Service) Scanner() error {
 				return fmt.Errorf("failed to save in db: %w", err)
 			}
 		}
+		err = s.WritePDF(tsv, unitGuid)
+		if err != nil {
+			return fmt.Errorf("failed to write pdf: %w", err)
+		}
 
 	}
+	return nil
 }
 
 func (s *Service) ParseFile(fileName string) ([]shema.Tsv, []string, error) {
@@ -101,19 +110,77 @@ func (s *Service) ParseFile(fileName string) ([]shema.Tsv, []string, error) {
 }
 
 func (s *Service) WritePDF(tsv []shema.Tsv, unitGuid []string) error {
-	for _, v := range unitGuid {
+	for _, guid := range unitGuid {
 		pdf := gopdf.GoPdf{}
 		pdf.Start(gopdf.Config{PageSize: *gopdf.PageSizeA4})
 		pdf.AddPage()
-		err := pdf.AddTTFFont("LiberationSerif-Regular", "resources/LiberationSerif-Regular.ttf")
-		if err != nil {
-			return fmt.Errorf("bad adding font: %w", err)
+
+		fontUrl := "https://github.com/google/fonts/blob/main/ofl/actor/Actor-Regular.ttf"
+		if err := DownloadFile("Actor-Regular.ttf", fontUrl); err != nil {
+			return fmt.Errorf("don't download font: %w", err)
 		}
-		err = pdf.SetFont("LiberationSerif-Regular", "", 14)
+
+		err := pdf.AddTTFFont("Actor-Regular", "Actor-Regular.ttf")
 		if err != nil {
-			return fmt.Errorf("bad setting font: %w", err)
+			return fmt.Errorf("don't add font: %w", err)
 		}
-		pdf.Cell(nil, "您好")
-		pdf.WritePdf("hello.pdf")
+
+		err = pdf.SetFont("Actor-Regular", "", 20)
+		if err != nil {
+			return fmt.Errorf("don't set font: %w", err)
+		}
+
+		for _, t := range tsv {
+			var resultArray []string
+			if guid == t.UnitGUID {
+				pdf.AddPage()
+				resultArray = append(resultArray, "Number: "+strings.TrimSpace(t.Number))
+				resultArray = append(resultArray, "MQTT: "+strings.TrimSpace(t.MQTT))
+				resultArray = append(resultArray, "InventoryID: "+strings.TrimSpace(t.InventoryID))
+				resultArray = append(resultArray, "UnitGUID: "+strings.TrimSpace(t.UnitGUID))
+				resultArray = append(resultArray, "MessageID: "+strings.TrimSpace(t.MessageID))
+				resultArray = append(resultArray, "MessageText: "+strings.TrimSpace(t.MessageText))
+				resultArray = append(resultArray, "Context: "+strings.TrimSpace(t.Context))
+				resultArray = append(resultArray, "MessageClass: "+strings.TrimSpace(t.MessageClass))
+				resultArray = append(resultArray, "Level: "+strings.TrimSpace(t.Level))
+				resultArray = append(resultArray, "Area: "+strings.TrimSpace(t.Area))
+				resultArray = append(resultArray, "Address: "+strings.TrimSpace(t.Address))
+				resultArray = append(resultArray, "Block: "+strings.TrimSpace(t.Block))
+				resultArray = append(resultArray, "Type: "+strings.TrimSpace(t.Type))
+				resultArray = append(resultArray, "Bit: "+strings.TrimSpace(t.Bit))
+				resultArray = append(resultArray, "InvertBit: "+strings.TrimSpace(t.InvertBit))
+			}
+			for _, str := range resultArray {
+				err = pdf.Text(str)
+				if err != nil {
+					return fmt.Errorf("can't write string: %w", err)
+				}
+			}
+		}
+		resultFile := s.config.DirectoryTo + guid + ".pdf"
+		err = pdf.WritePdf(resultFile)
+		if err != nil {
+			return fmt.Errorf("can't write pdf: %w", err)
+		}
+
 	}
+	return nil
+}
+
+func DownloadFile(filepath string, url string) error {
+	resp, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+
+	defer resp.Body.Close()
+	out, err := os.Create(filepath)
+	if err != nil {
+		return err
+	}
+
+	defer out.Close()
+
+	_, err = io.Copy(out, resp.Body)
+	return err
 }
