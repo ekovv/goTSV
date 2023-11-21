@@ -68,6 +68,10 @@ func (s *Service) ParseFile(fileName string) ([]shema.Tsv, []string, error) {
 		return nil, nil, fmt.Errorf("error opening: %w", err)
 	}
 
+	if !strings.HasSuffix(file.Name(), ".tsv") {
+		return nil, nil, fmt.Errorf("not a tsv file: %s", fileName)
+	}
+
 	defer file.Close()
 
 	reader := csv.NewReader(file)
