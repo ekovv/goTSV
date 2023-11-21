@@ -1,4 +1,4 @@
-CREATE TABLE tsv (
+CREATE TABLE Occurrence (
                      ID           SERIAL PRIMARY KEY,
                      Number       int,
                      MQTT         VARCHAR(255),

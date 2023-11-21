@@ -56,7 +56,6 @@ func (s *Watcher) Scan() chan string {
 			time.Sleep(10 * time.Second)
 		}
 	}()
-	time.Sleep(1 * time.Minute)
 	return out
 
 }

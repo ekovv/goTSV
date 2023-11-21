@@ -25,8 +25,8 @@ func NewDBStorage(config config.Config) (*DBStorage, error) {
 		return nil, fmt.Errorf("failed to create migrate driver, %w", err)
 	}
 	m, err := migrate.NewWithDatabaseInstance(
-		"file://migration",
-		"url", driver)
+		"file://migrations",
+		"tsv", driver)
 	if err != nil {
 		return nil, fmt.Errorf("failed to migrate: %w", err)
 	}
@@ -49,7 +49,7 @@ func (s *DBStorage) CheckConnection() error {
 }
 
 func (s *DBStorage) Save(sh shema.Tsv) error {
-	insertQuery := `INSERT INTO tsv(number, mqtt, inventoryid, unitguid, messageid, messagetext, context, messageclass, 
+	insertQuery := `INSERT INTO occurrence(number, mqtt, inventoryid, unitguid, messageid, messagetext, context, messageclass, 
                 level, area, address, block, type, bit, invertbit) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`
 
 	_, err := s.conn.Exec(insertQuery, sh.Number, sh.MQTT, sh.InventoryID, sh.UnitGUID, sh.MessageID, sh.MessageText, sh.Context, sh.MessageClass, sh.Level,
