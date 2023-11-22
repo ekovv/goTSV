@@ -179,3 +179,27 @@ func (s *Service) WritePDF(tsv []shema.Tsv, unitGuid []string) error {
 	}
 	return nil
 }
+
+func (s *Service) GetAll(req shema.Request) ([][]shema.Tsv, error) {
+	tsvFromDB, err := s.storage.GetAllGuids(req.UnitGUID)
+	if err != nil {
+		return nil, fmt.Errorf("can't get tsvFromDB from db: %w", err)
+	}
+	arrayWithPage := SubArray(req.Page, tsvFromDB)
+	var resultArray [][]shema.Tsv
+	for i := 0; i < len(arrayWithPage); i += req.Limit {
+		end := i + req.Limit
+		if end > len(arrayWithPage) {
+			end = len(arrayWithPage)
+		}
+		resultArray = append(resultArray, arrayWithPage[i:end])
+	}
+	return resultArray, nil
+}
+
+func SubArray(startIndex int, data []shema.Tsv) []shema.Tsv {
+	if startIndex < 0 || startIndex >= len(data) {
+		return nil
+	}
+	return data[startIndex:]
+}

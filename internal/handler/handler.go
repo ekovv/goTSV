@@ -3,6 +3,8 @@ package handler
 import (
 	"github.com/gin-gonic/gin"
 	"goTSV/internal/service"
+	"goTSV/internal/shema"
+	"net/http"
 )
 
 type Handler struct {
@@ -28,5 +30,10 @@ func (s *Handler) Start() {
 }
 
 func (s *Handler) GetAll(c *gin.Context) {
-
+	var req shema.Request
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return
+	}
 }

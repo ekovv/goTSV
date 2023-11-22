@@ -25,5 +25,6 @@ type Files struct {
 
 type Request struct {
 	UnitGUID string `json:"unit_guid"`
-	Limit
+	Limit    int    `json:"limit"`
+	Page     int    `json:"page"`
 }

@@ -68,3 +68,26 @@ func (s *DBStorage) SaveFiles(sh shema.Files) error {
 	}
 	return nil
 }
+
+func (s *DBStorage) GetAllGuids(unitGuid string) ([]shema.Tsv, error) {
+	rows, err := s.conn.Query("SELECT * FROM occurrence WHERE unitguid = ?", unitGuid)
+	if err != nil {
+		return nil, fmt.Errorf("error getting: %w", err)
+	}
+	defer rows.Close()
+
+	var data []shema.Tsv
+	for rows.Next() {
+		var d shema.Tsv
+		err = rows.Scan(&d.Number, &d.MQTT, &d.InventoryID, &d.UnitGUID, &d.MessageID, &d.MessageText, &d.Context, &d.MessageClass,
+			&d.Level, &d.Area, &d.Address, &d.Block, &d.Type, &d.Bit, &d.InvertBit)
+		if err != nil {
+			return nil, fmt.Errorf("error put in struct: %w", err)
+		}
+		data = append(data, d)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("error rows: %w", err)
+	}
+	return data, nil
+}
