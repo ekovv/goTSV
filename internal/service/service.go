@@ -82,26 +82,23 @@ func (s *Service) ParseFile(fileName string) ([]shema.Tsv, []string, error) {
 		if str == nil {
 			break
 		}
+		if len(strings.TrimSpace(str[3])) < 10 {
+			continue
+		}
 		if err != nil {
 			log.Fatal(err)
 		}
 	loop:
 		for _, s := range data {
-			if s.UnitGUID == strings.TrimSpace(str[3]) {
-				break
-			} else {
-				for _, guid := range array {
-					if s.UnitGUID == guid || guid == strings.TrimSpace(str[3]) {
-						continue loop
-					}
+			for _, guid := range array {
+				if s.UnitGUID == guid || guid == strings.TrimSpace(str[3]) {
+					continue loop
 				}
-				array = append(array, strings.TrimSpace(str[3]))
 			}
+			array = append(array, strings.TrimSpace(str[3]))
+
 		}
 
-		if str[0] == "n" || str[0] == "номер" {
-			continue
-		}
 		t := shema.Tsv{
 			Number:       strings.TrimSpace(str[0]),
 			MQTT:         strings.TrimSpace(str[1]),
@@ -121,7 +118,6 @@ func (s *Service) ParseFile(fileName string) ([]shema.Tsv, []string, error) {
 		}
 		data = append(data, t)
 	}
-	fmt.Println("dddd")
 	return data, array, nil
 }
 
@@ -131,12 +127,14 @@ func (s *Service) WritePDF(tsv []shema.Tsv, unitGuid []string) error {
 		pdf.Start(gopdf.Config{PageSize: *gopdf.PageSizeA4})
 		pdf.AddPage()
 
-		err := pdf.AddTTFFont("SANS-SERIF", "resources/Actor-Regular.ttf")
+		defer pdf.Close()
+
+		err := pdf.AddTTFFont("LiberationSerif-Regular", "resources/LiberationSerif-Regular.ttf")
 		if err != nil {
 			return err
 		}
 
-		err = pdf.SetFont("SANS-SERIF", "", 14)
+		err = pdf.SetFont("LiberationSerif-Regular", "", 14)
 		if err != nil {
 			return err
 		}
@@ -160,11 +158,15 @@ func (s *Service) WritePDF(tsv []shema.Tsv, unitGuid []string) error {
 				resultArray = append(resultArray, "Type: "+strings.TrimSpace(t.Type))
 				resultArray = append(resultArray, "Bit: "+strings.TrimSpace(t.Bit))
 				resultArray = append(resultArray, "InvertBit: "+strings.TrimSpace(t.InvertBit))
-			}
-			for _, str := range resultArray {
-				err = pdf.Text(str)
-				if err != nil {
-					return fmt.Errorf("can't write string: %w", err)
+
+				y := 20
+				for _, str := range resultArray {
+					pdf.SetXY(10, float64(y))
+					err := pdf.Text(str)
+					if err != nil {
+						return fmt.Errorf("can't write string: %w", err)
+					}
+					y += 20
 				}
 			}
 		}
