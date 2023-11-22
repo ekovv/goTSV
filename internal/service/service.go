@@ -4,11 +4,11 @@ import (
 	"encoding/csv"
 	"fmt"
 	"github.com/signintech/gopdf"
+	"go.uber.org/zap"
 	"goTSV/config"
 	"goTSV/internal/shema"
 	"goTSV/internal/storage"
 	"goTSV/internal/watcher"
-	"log"
 	"os"
 	"strings"
 )
@@ -17,6 +17,7 @@ type Service struct {
 	storage storage.DBStorage
 	watcher *watcher.Watcher
 	config  config.Config
+	logger  *zap.Logger
 }
 
 func NewService(storage storage.DBStorage, watcher *watcher.Watcher, config config.Config) *Service {
@@ -34,7 +35,8 @@ func (s *Service) Scanner() error {
 				Err:  err,
 			}
 			err = s.storage.SaveFiles(f)
-			return fmt.Errorf("failed to parse: %w", err)
+			s.logger.Info("failed to parse")
+			return err
 		} else {
 			f := shema.Files{
 				File: file,
@@ -42,19 +44,22 @@ func (s *Service) Scanner() error {
 			}
 			err := s.storage.SaveFiles(f)
 			if err != nil {
-				return fmt.Errorf("failed to save files in db: %w", err)
+				s.logger.Info("failed to save files in db")
+				return err
 			}
 		}
 
 		for _, ts := range tsv {
 			err = s.storage.Save(ts)
 			if err != nil {
-				return fmt.Errorf("failed to save in db: %w", err)
+				s.logger.Info("failed to save in db")
+				return err
 			}
 		}
 		err = s.WritePDF(tsv, unitGuid)
 		if err != nil {
-			return fmt.Errorf("failed to write pdf: %w", err)
+			s.logger.Info("failed to write pdf")
+			return err
 		}
 
 	}
@@ -64,11 +69,13 @@ func (s *Service) Scanner() error {
 func (s *Service) ParseFile(fileName string) ([]shema.Tsv, []string, error) {
 	file, err := os.Open(s.config.DirectoryFrom + "/" + fileName)
 	if err != nil {
-		return nil, nil, fmt.Errorf("error opening: %w", err)
+		s.logger.Info("error opening")
+		return nil, nil, err
 	}
 
 	if !strings.HasSuffix(file.Name(), ".tsv") {
-		return nil, nil, fmt.Errorf("not a tsv file: %s", fileName)
+		s.logger.Info("not a tsv file")
+		return nil, nil, err
 	}
 
 	defer file.Close()
@@ -79,14 +86,15 @@ func (s *Service) ParseFile(fileName string) ([]shema.Tsv, []string, error) {
 	var array []string
 	for {
 		str, err := reader.Read()
+		if err != nil {
+			s.logger.Info("not a tsv strings")
+			return nil, nil, err
+		}
 		if str == nil {
 			break
 		}
 		if len(strings.TrimSpace(str[3])) < 10 {
 			continue
-		}
-		if err != nil {
-			log.Fatal(err)
 		}
 	loop:
 		for _, s := range data {
@@ -131,11 +139,13 @@ func (s *Service) WritePDF(tsv []shema.Tsv, unitGuid []string) error {
 
 		err := pdf.AddTTFFont("SANS-SERIF", "resources/Actor-Regular.ttf")
 		if err != nil {
+			s.logger.Info("can't add font")
 			return err
 		}
 
 		err = pdf.SetFont("SANS-SERIF", "", 14)
 		if err != nil {
+			s.logger.Info("can't set font")
 			return err
 		}
 
@@ -164,7 +174,8 @@ func (s *Service) WritePDF(tsv []shema.Tsv, unitGuid []string) error {
 					pdf.SetXY(10, float64(y))
 					err := pdf.Text(str)
 					if err != nil {
-						return fmt.Errorf("can't write string: %w", err)
+						s.logger.Info("can't write string")
+						return err
 					}
 					y += 20
 				}
@@ -173,7 +184,8 @@ func (s *Service) WritePDF(tsv []shema.Tsv, unitGuid []string) error {
 		resultFile := s.config.DirectoryTo + "/" + guid + ".pdf"
 		err = pdf.WritePdf(resultFile)
 		if err != nil {
-			return fmt.Errorf("can't write pdf: %w", err)
+			s.logger.Info("can't write pdf")
+			return err
 		}
 
 	}
@@ -182,11 +194,13 @@ func (s *Service) WritePDF(tsv []shema.Tsv, unitGuid []string) error {
 
 func (s *Service) GetAll(r shema.Request) ([][]shema.Tsv, error) {
 	if r.Limit <= 0 || r.UnitGUID == "" || r.Page < 0 {
-		return nil, fmt.Errorf("bad json request")
+		s.logger.Info("bad request in json")
+		return nil, fmt.Errorf("bad request in json")
 	}
 	tsvFromDB, err := s.storage.GetAllGuids(r.UnitGUID)
 	if err != nil {
-		return nil, fmt.Errorf("can't get tsvFromDB from db: %w", err)
+		s.logger.Info("can't get tsv from db")
+		return nil, err
 	}
 	arrayWithPage := SubArray(r.Page, tsvFromDB)
 	var resultArray [][]shema.Tsv
