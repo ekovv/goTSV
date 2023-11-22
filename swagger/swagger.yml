@@ -1,0 +1,93 @@
+openapi: "3.0.0"
+info:
+  version: 1.0.0
+  title: API для получение информации по UnitGUID
+paths:
+  /api/all:
+    post:
+      summary: Получение информации
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Request'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+          description: Запрос успешен
+        '400':
+          description: Неверный формат запроса
+        '409':
+          description: Логин уже занят
+        '500':
+          description: Внутренняя ошибка сервера
+
+
+
+components:
+  schemas:
+    Request:
+      type: object
+      properties:
+        "unit_guid":
+          type: string
+        "limit":
+          type: integer
+        "page":
+          type: integer
+      required:
+        - unit_guid
+        - limit
+        - page
+    Response:
+      type: object
+      properties:
+        Number:
+          type: string
+          description: Номер
+        MQTT:
+          type: string
+          description: MQTT
+        InventoryID:
+          type: string
+          description: Идентификатор инвентаря
+        UnitGUID:
+          type: string
+          description: Уникальный идентификатор юнита
+        MessageID:
+          type: string
+          description: Идентификатор сообщения
+        MessageText:
+          type: string
+          description: Текст сообщения
+        Context:
+          type: string
+          description: Контекст сообщения
+        MessageClass:
+          type: string
+          description: Класс сообщения
+        Level:
+          type: string
+          description: Уровень сообщения
+        Area:
+          type: string
+          description: Область сообщения
+        Address:
+          type: string
+          description: Адрес сообщения
+        Block:
+          type: string
+          description: Блок сообщения
+        Type:
+          type: string
+          description: Тип сообщения
+        Bit:
+          type: string
+          description: Бит сообщения
+        InvertBit:
+          type: string
+          description: Инвертированный бит сообщения

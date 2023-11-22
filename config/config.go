@@ -7,6 +7,7 @@ import (
 )
 
 type Config struct {
+	Host            string
 	DirectoryFrom   string
 	DirectoryTo     string
 	DB              string
@@ -14,6 +15,7 @@ type Config struct {
 }
 
 type F struct {
+	host            *string
 	directoryFrom   *string
 	directoryTo     *string
 	db              *string
@@ -22,7 +24,10 @@ type F struct {
 
 var f F
 
+const addr = "localhost:8080"
+
 func init() {
+	f.host = flag.String("a", addr, "-a=")
 	f.directoryFrom = flag.String("f", "", "-f=from")
 	f.db = flag.String("d", "", "-d=db")
 	f.directoryTo = flag.String("t", "", "-t=to")
@@ -31,19 +36,23 @@ func init() {
 
 func New() (c Config) {
 	flag.Parse()
-	envRefresh := os.Getenv("REPORT_INTERVAL")
-	if envRunDirectoryFrom := os.Getenv("TOKEN"); envRunDirectoryFrom != "" {
+	if envHost := os.Getenv("HOST"); envHost != "" {
+		f.host = &envHost
+	}
+	if envRunDirectoryFrom := os.Getenv("DIRECTORY_FROM"); envRunDirectoryFrom != "" {
 		f.directoryFrom = &envRunDirectoryFrom
 	}
-	if envRunDirectoryTo := os.Getenv("TOKEN"); envRunDirectoryTo != "" {
+	if envRunDirectoryTo := os.Getenv("DIRECTORY_TO"); envRunDirectoryTo != "" {
 		f.directoryTo = &envRunDirectoryTo
 	}
 	if envDB := os.Getenv("DATABASE_DSN"); envDB != "" {
 		f.db = &envDB
 	}
+	envRefresh := os.Getenv("REFRESH_INTERVAL")
 	if refreshInterval, _ := strconv.Atoi(envRefresh); refreshInterval != 0 {
 		f.refreshInterval = &refreshInterval
 	}
+	c.Host = *f.host
 	c.DirectoryFrom = *f.directoryFrom
 	c.DB = *f.db
 	c.DirectoryTo = *f.directoryTo

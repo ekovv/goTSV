@@ -180,15 +180,18 @@ func (s *Service) WritePDF(tsv []shema.Tsv, unitGuid []string) error {
 	return nil
 }
 
-func (s *Service) GetAll(req shema.Request) ([][]shema.Tsv, error) {
-	tsvFromDB, err := s.storage.GetAllGuids(req.UnitGUID)
+func (s *Service) GetAll(r shema.Request) ([][]shema.Tsv, error) {
+	if r.Limit <= 0 || r.UnitGUID == "" || r.Page < 0 {
+		return nil, fmt.Errorf("bad json request")
+	}
+	tsvFromDB, err := s.storage.GetAllGuids(r.UnitGUID)
 	if err != nil {
 		return nil, fmt.Errorf("can't get tsvFromDB from db: %w", err)
 	}
-	arrayWithPage := SubArray(req.Page, tsvFromDB)
+	arrayWithPage := SubArray(r.Page, tsvFromDB)
 	var resultArray [][]shema.Tsv
-	for i := 0; i < len(arrayWithPage); i += req.Limit {
-		end := i + req.Limit
+	for i := 0; i < len(arrayWithPage); i += r.Limit {
+		end := i + r.Limit
 		if end > len(arrayWithPage) {
 			end = len(arrayWithPage)
 		}
