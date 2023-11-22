@@ -129,12 +129,12 @@ func (s *Service) WritePDF(tsv []shema.Tsv, unitGuid []string) error {
 
 		defer pdf.Close()
 
-		err := pdf.AddTTFFont("LiberationSerif-Regular", "resources/LiberationSerif-Regular.ttf")
+		err := pdf.AddTTFFont("SANS-SERIF", "resources/Actor-Regular.ttf")
 		if err != nil {
 			return err
 		}
 
-		err = pdf.SetFont("LiberationSerif-Regular", "", 14)
+		err = pdf.SetFont("SANS-SERIF", "", 14)
 		if err != nil {
 			return err
 		}
