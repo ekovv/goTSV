@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"goTSV/config"
+	"goTSV/internal/constants"
 	"goTSV/internal/domains/mocks"
 	"goTSV/internal/shema"
 	"net/http"
@@ -49,6 +50,32 @@ func TestHandler_GetAll(t *testing.T) {
 			},
 			wantCode: http.StatusOK,
 			want:     [][]shema.Tsv{{shema.Tsv{UnitGUID: "ajsuiwp18203475nmgbdxgsk"}}},
+		},
+		{
+			name: "BAD#1",
+			body: shema.Request{
+				UnitGUID: "",
+				Limit:    1,
+				Page:     2,
+			},
+			serviceMock: func(c *mocks.Service) {
+				c.Mock.On("GetAll", shema.Request{UnitGUID: "", Limit: 1, Page: 2}).Return([][]shema.Tsv{}, constants.ErrNotFound).Times(1)
+			},
+			wantCode: http.StatusBadRequest,
+			want:     [][]shema.Tsv{},
+		},
+		{
+			name: "BAD#2",
+			body: shema.Request{
+				UnitGUID: "1yua683",
+				Limit:    1,
+				Page:     1,
+			},
+			serviceMock: func(c *mocks.Service) {
+				c.Mock.On("GetAll", shema.Request{UnitGUID: "1yua683", Limit: 1, Page: 1}).Return([][]shema.Tsv{}, constants.ErrInvalidData).Times(1)
+			},
+			wantCode: http.StatusBadRequest,
+			want:     [][]shema.Tsv{},
 		},
 	}
 

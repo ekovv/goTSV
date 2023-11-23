@@ -21,8 +21,6 @@ paths:
           description: Запрос успешен
         '400':
           description: Неверный формат запроса
-        '409':
-          description: Логин уже занят
         '500':
           description: Внутренняя ошибка сервера
 
