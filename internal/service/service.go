@@ -22,7 +22,11 @@ type Service struct {
 }
 
 func NewService(storage domains.Storage, watcher *watcher.Watcher, config config.Config) *Service {
-	return &Service{storage: storage, watcher: watcher, config: config}
+	logger, err := zap.NewProduction()
+	if err != nil {
+		return nil
+	}
+	return &Service{storage: storage, watcher: watcher, config: config, logger: logger}
 }
 
 func (s *Service) Scanner() error {
@@ -33,19 +37,23 @@ func (s *Service) Scanner() error {
 		if err != nil {
 			f := shema.Files{
 				File: file,
-				Err:  err,
+				Err:  err.Error(),
 			}
 			err = s.storage.SaveFiles(f)
-			//s.logger.Info("failed to parse")
-			return err
+			if err != nil {
+				s.logger.Info("failed to save file in db")
+				return err
+			}
+			s.logger.Info("failed to parse")
+			continue
 		} else {
 			f := shema.Files{
 				File: file,
-				Err:  nil,
+				Err:  "",
 			}
 			err := s.storage.SaveFiles(f)
 			if err != nil {
-				//s.logger.Info("failed to save files in db")
+				s.logger.Info("failed to save files in db")
 				return err
 			}
 		}
@@ -76,7 +84,7 @@ func (s *Service) ParseFile(fileName string) ([]shema.Tsv, []string, error) {
 
 	if !strings.HasSuffix(file.Name(), ".tsv") {
 		s.logger.Info("not a tsv file")
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("file: %s, not a tsv file", fileName)
 	}
 
 	defer file.Close()
@@ -141,13 +149,13 @@ func (s *Service) WritePDF(tsv []shema.Tsv, unitGuid []string) error {
 
 		defer pdf.Close()
 
-		err := pdf.AddTTFFont("SANS-SERIF", "resources/Actor-Regular.ttf")
+		err := pdf.AddTTFFont("LiberationSerif-Regular", "resources/LiberationSerif-Regular.ttf")
 		if err != nil {
 			s.logger.Info("can't add font")
 			return err
 		}
 
-		err = pdf.SetFont("SANS-SERIF", "", 14)
+		err = pdf.SetFont("LiberationSerif-Regular", "", 14)
 		if err != nil {
 			s.logger.Info("can't set font")
 			return err

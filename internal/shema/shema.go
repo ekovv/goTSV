@@ -20,7 +20,7 @@ type Tsv struct {
 
 type Files struct {
 	File string
-	Err  error
+	Err  string
 }
 
 type Request struct {

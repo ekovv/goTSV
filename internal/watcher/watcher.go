@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"goTSV/config"
 	"os"
-	"strings"
 	"sync"
 	"time"
 )
@@ -34,7 +33,7 @@ func (s *Watcher) Scan(out chan string) {
 				return
 			}
 			for _, file := range filesFromDir {
-				if strings.HasSuffix(file.Name(), ".tsv") && !file.IsDir() {
+				if !file.IsDir() {
 					s.mutex.Lock()
 					_, ok := s.files[file.Name()]
 					if ok {
