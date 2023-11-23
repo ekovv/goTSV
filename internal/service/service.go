@@ -9,6 +9,7 @@ import (
 	"goTSV/internal/domains"
 	"goTSV/internal/shema"
 	"goTSV/internal/watcher"
+	"io"
 	"os"
 	"strings"
 )
@@ -35,7 +36,7 @@ func (s *Service) Scanner() error {
 				Err:  err,
 			}
 			err = s.storage.SaveFiles(f)
-			s.logger.Info("failed to parse")
+			//s.logger.Info("failed to parse")
 			return err
 		} else {
 			f := shema.Files{
@@ -44,7 +45,7 @@ func (s *Service) Scanner() error {
 			}
 			err := s.storage.SaveFiles(f)
 			if err != nil {
-				s.logger.Info("failed to save files in db")
+				//s.logger.Info("failed to save files in db")
 				return err
 			}
 		}
@@ -87,6 +88,9 @@ func (s *Service) ParseFile(fileName string) ([]shema.Tsv, []string, error) {
 	for {
 		str, err := reader.Read()
 		if err != nil {
+			if err == io.EOF {
+				return data, array, nil
+			}
 			s.logger.Info("not a tsv strings")
 			return nil, nil, err
 		}
@@ -153,21 +157,21 @@ func (s *Service) WritePDF(tsv []shema.Tsv, unitGuid []string) error {
 			var resultArray []string
 			if guid == t.UnitGUID {
 				pdf.AddPage()
-				resultArray = append(resultArray, "Number: "+strings.TrimSpace(t.Number))
-				resultArray = append(resultArray, "MQTT: "+strings.TrimSpace(t.MQTT))
-				resultArray = append(resultArray, "InventoryID: "+strings.TrimSpace(t.InventoryID))
-				resultArray = append(resultArray, "UnitGUID: "+strings.TrimSpace(t.UnitGUID))
-				resultArray = append(resultArray, "MessageID: "+strings.TrimSpace(t.MessageID))
-				resultArray = append(resultArray, "MessageText: "+strings.TrimSpace(t.MessageText))
-				resultArray = append(resultArray, "Context: "+strings.TrimSpace(t.Context))
-				resultArray = append(resultArray, "MessageClass: "+strings.TrimSpace(t.MessageClass))
-				resultArray = append(resultArray, "Level: "+strings.TrimSpace(t.Level))
-				resultArray = append(resultArray, "Area: "+strings.TrimSpace(t.Area))
-				resultArray = append(resultArray, "Address: "+strings.TrimSpace(t.Address))
-				resultArray = append(resultArray, "Block: "+strings.TrimSpace(t.Block))
-				resultArray = append(resultArray, "Type: "+strings.TrimSpace(t.Type))
-				resultArray = append(resultArray, "Bit: "+strings.TrimSpace(t.Bit))
-				resultArray = append(resultArray, "InvertBit: "+strings.TrimSpace(t.InvertBit))
+				resultArray = append(resultArray, "n: "+strings.TrimSpace(t.Number))
+				resultArray = append(resultArray, "mqtt: "+strings.TrimSpace(t.MQTT))
+				resultArray = append(resultArray, "invid: "+strings.TrimSpace(t.InventoryID))
+				resultArray = append(resultArray, "unit_guid: "+strings.TrimSpace(t.UnitGUID))
+				resultArray = append(resultArray, "msg_id: "+strings.TrimSpace(t.MessageID))
+				resultArray = append(resultArray, "text: "+strings.TrimSpace(t.MessageText))
+				resultArray = append(resultArray, "context: "+strings.TrimSpace(t.Context))
+				resultArray = append(resultArray, "class: "+strings.TrimSpace(t.MessageClass))
+				resultArray = append(resultArray, "level: "+strings.TrimSpace(t.Level))
+				resultArray = append(resultArray, "area: "+strings.TrimSpace(t.Area))
+				resultArray = append(resultArray, "addr: "+strings.TrimSpace(t.Address))
+				resultArray = append(resultArray, "block: "+strings.TrimSpace(t.Block))
+				resultArray = append(resultArray, "type: "+strings.TrimSpace(t.Type))
+				resultArray = append(resultArray, "bit: "+strings.TrimSpace(t.Bit))
+				resultArray = append(resultArray, "invert_bit: "+strings.TrimSpace(t.InvertBit))
 
 				y := 20
 				for _, str := range resultArray {
