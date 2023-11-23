@@ -3,18 +3,18 @@ package handler
 import (
 	"github.com/gin-gonic/gin"
 	"goTSV/config"
-	"goTSV/internal/service"
+	"goTSV/internal/domains"
 	"goTSV/internal/shema"
 	"net/http"
 )
 
 type Handler struct {
-	service service.Service
+	service domains.Service
 	engine  *gin.Engine
 	config  config.Config
 }
 
-func NewHandler(service service.Service, cnf config.Config) *Handler {
+func NewHandler(service domains.Service, cnf config.Config) *Handler {
 	router := gin.Default()
 	h := &Handler{
 		service: service,

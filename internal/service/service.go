@@ -6,21 +6,21 @@ import (
 	"github.com/signintech/gopdf"
 	"go.uber.org/zap"
 	"goTSV/config"
+	"goTSV/internal/domains"
 	"goTSV/internal/shema"
-	"goTSV/internal/storage"
 	"goTSV/internal/watcher"
 	"os"
 	"strings"
 )
 
 type Service struct {
-	storage storage.DBStorage
+	storage domains.Storage
 	watcher *watcher.Watcher
 	config  config.Config
 	logger  *zap.Logger
 }
 
-func NewService(storage storage.DBStorage, watcher *watcher.Watcher, config config.Config) *Service {
+func NewService(storage domains.Storage, watcher *watcher.Watcher, config config.Config) *Service {
 	return &Service{storage: storage, watcher: watcher, config: config}
 }
 

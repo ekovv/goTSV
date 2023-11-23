@@ -15,8 +15,8 @@ func main() {
 		return
 	}
 	w := watcher.NewWatcher(cnfg)
-	s := service.NewService(*st, w, cnfg)
-	h := handler.NewHandler(*s, cnfg)
+	s := service.NewService(st, w, cnfg)
+	h := handler.NewHandler(s, cnfg)
 	go func() {
 		err := s.Scanner()
 		if err != nil {
