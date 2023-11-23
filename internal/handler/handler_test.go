@@ -3,10 +3,10 @@ package handler
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"goTSV/config"
-	"goTSV/internal/constants"
 	"goTSV/internal/domains/mocks"
 	"goTSV/internal/shema"
 	"net/http"
@@ -59,7 +59,7 @@ func TestHandler_GetAll(t *testing.T) {
 				Page:     2,
 			},
 			serviceMock: func(c *mocks.Service) {
-				c.Mock.On("GetAll", shema.Request{UnitGUID: "", Limit: 1, Page: 2}).Return(nil, constants.ErrNotFound).Times(1)
+				c.Mock.On("GetAll", shema.Request{UnitGUID: "", Limit: 1, Page: 2}).Return(nil, errors.New("invalid data")).Times(1)
 			},
 			wantCode: http.StatusBadRequest,
 			want:     nil,
@@ -72,7 +72,7 @@ func TestHandler_GetAll(t *testing.T) {
 				Page:     1,
 			},
 			serviceMock: func(c *mocks.Service) {
-				c.Mock.On("GetAll", shema.Request{UnitGUID: "1yua683", Limit: 1, Page: 1}).Return(nil, constants.ErrInvalidData).Times(1)
+				c.Mock.On("GetAll", shema.Request{UnitGUID: "1yua683", Limit: 1, Page: 1}).Return(nil, errors.New("not found")).Times(1)
 			},
 			wantCode: http.StatusBadRequest,
 			want:     nil,
