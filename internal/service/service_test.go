@@ -94,6 +94,14 @@ func TestService_ParseFile(t *testing.T) {
 				return
 			}
 
+			defer func(dir string) {
+				err := removeTempDir(dir)
+				if err != nil {
+					t.Errorf("not delete temp dir: %v", err)
+					return
+				}
+			}(tempDir)
+
 			file, err := createTempFile(tempDir, tt.args.file)
 			if err != nil {
 				t.Errorf("not creating temp file: %v", err)
@@ -121,11 +129,6 @@ func TestService_ParseFile(t *testing.T) {
 			}
 			if !reflect.DeepEqual(guids, tt.wantGuids) {
 				t.Errorf("Parse() got1 = %v, want %v", guids, tt.wantGuids)
-			}
-			err = removeTempDir(tempDir)
-			if err != nil {
-				t.Errorf("not removing temp dir: %v", err)
-				return
 			}
 		})
 	}
