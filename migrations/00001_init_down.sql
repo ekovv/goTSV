@@ -1,2 +1,2 @@
-DROP TABLE tsv;
+DROP TABLE occurrence;
 DROP TABLE checkedfiles;

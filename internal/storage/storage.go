@@ -55,7 +55,8 @@ func (s *DBStorage) Save(sh shema.Tsv) error {
 		sh.Area, sh.Address, sh.Block, sh.Type, sh.Bit, sh.InvertBit)
 
 	if err != nil {
-		fmt.Errorf("not save in db %w", err)
+		fmt.Errorf("failed to save in db: %v", err)
+		return err
 	}
 	return nil
 }
@@ -65,6 +66,7 @@ func (s *DBStorage) SaveFiles(sh shema.Files) error {
 	_, err := s.conn.Exec(insertQuery, sh.File, sh.Err)
 	if err != nil {
 		fmt.Errorf("not save in db %w", err)
+		return err
 	}
 	return nil
 }
