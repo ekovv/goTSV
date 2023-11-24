@@ -3,7 +3,9 @@ package service
 import (
 	"encoding/csv"
 	"errors"
+	"go.uber.org/zap"
 	"goTSV/config"
+	"goTSV/internal/constants"
 	"goTSV/internal/shema"
 	"os"
 	"reflect"
@@ -29,7 +31,7 @@ func TestService_ParseFile(t *testing.T) {
 				{
 					Number:       "5",
 					InventoryID:  "G-044325",
-					UnitGUID:     "01749246-95f6-57db-b7c3-2ae0e8be671f",
+					UnitGUID:     "01749246-9617-585e-9e19-157ccad61ee2",
 					MessageID:    "cold78_Defrost_status",
 					MessageText:  "Разморозка",
 					MessageClass: "waiting",
@@ -42,6 +44,45 @@ func TestService_ParseFile(t *testing.T) {
 				"01749246-9617-585e-9e19-157ccad61ee2",
 			},
 			wantErr: nil,
+		},
+		{
+			name: "OK#2",
+			args: args{dir: "testDirectory", file: "OK2.tsv"},
+			wantTsv: []shema.Tsv{
+				{
+					Number:       "5",
+					InventoryID:  "G-044325",
+					UnitGUID:     "01749246-9617-585e-9e19-157ccad61ee2",
+					MessageID:    "cold78_Defrost_status",
+					MessageText:  "Разморозка",
+					MessageClass: "waiting",
+					Level:        "100",
+					Area:         "LOCAL",
+					Address:      "cold78_status.Defrost_status",
+				},
+				{
+					Number:       "6",
+					InventoryID:  "G-044325",
+					UnitGUID:     "01749246-9617-585e-9e19-157ccad61ee2",
+					MessageID:    "cold78_VentSK_status",
+					MessageText:  "Вентилятор",
+					MessageClass: "working",
+					Level:        "100",
+					Area:         "LOCAL",
+					Address:      "cold78_status.VentSK_status",
+				},
+			},
+			wantGuids: []string{
+				"01749246-9617-585e-9e19-157ccad61ee2",
+			},
+			wantErr: nil,
+		},
+		{
+			name:      "BAD#1",
+			args:      args{dir: "testDirectory", file: "BAD1"},
+			wantTsv:   nil,
+			wantGuids: nil,
+			wantErr:   constants.ErrNotTSV,
 		},
 	}
 
@@ -64,9 +105,10 @@ func TestService_ParseFile(t *testing.T) {
 				t.Errorf("not writing temp file: %v", err)
 				return
 			}
-
+			logger, err := zap.NewProduction()
 			s := &Service{
 				config: config.Config{DirectoryFrom: tempDir},
+				logger: logger,
 			}
 			tsv, guids, err := s.ParseFile(tt.args.file)
 
@@ -90,7 +132,7 @@ func TestService_ParseFile(t *testing.T) {
 }
 
 func createTempDir(dir string, t *testing.T) (string, error) {
-	tempDir, err := os.MkdirTemp("", dir)
+	tempDir, err := os.MkdirTemp(".", dir)
 	if err != nil {
 		t.Errorf("not created directory")
 		return "", err
@@ -99,7 +141,7 @@ func createTempDir(dir string, t *testing.T) (string, error) {
 }
 
 func createTempFile(dir, name string) (*os.File, error) {
-	tempFile, err := os.CreateTemp(dir, name)
+	tempFile, err := os.Create(dir + "/" + name)
 	if err != nil {
 		return nil, err
 	}

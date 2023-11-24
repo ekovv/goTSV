@@ -6,6 +6,7 @@ import (
 	"github.com/signintech/gopdf"
 	"go.uber.org/zap"
 	"goTSV/config"
+	"goTSV/internal/constants"
 	"goTSV/internal/domains"
 	"goTSV/internal/shema"
 	"goTSV/internal/watcher"
@@ -84,7 +85,7 @@ func (s *Service) ParseFile(fileName string) ([]shema.Tsv, []string, error) {
 
 	if !strings.HasSuffix(file.Name(), ".tsv") {
 		s.logger.Info("not a tsv file")
-		return nil, nil, fmt.Errorf("file: %s, not a tsv file", fileName)
+		return nil, nil, constants.ErrNotTSV
 	}
 
 	defer file.Close()
@@ -94,6 +95,11 @@ func (s *Service) ParseFile(fileName string) ([]shema.Tsv, []string, error) {
 	var data []shema.Tsv
 	var array []string
 	for {
+		for _, d := range data {
+			if array == nil {
+				array = append(array, d.UnitGUID)
+			}
+		}
 		str, err := reader.Read()
 		if err != nil {
 			if err == io.EOF {
