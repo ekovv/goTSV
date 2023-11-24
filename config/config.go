@@ -1,17 +1,20 @@
 package config
 
 import (
+	"encoding/json"
 	"flag"
+	"io"
 	"os"
 	"strconv"
 )
 
 type Config struct {
-	Host            string
-	DirectoryFrom   string
-	DirectoryTo     string
-	DB              string
-	RefreshInterval int
+	Host            string `json:"host"`
+	DirectoryFrom   string `json:"dir_from"`
+	DirectoryTo     string `json:"dir_to"`
+	DB              string `json:"dsn"`
+	RefreshInterval int    `json:"refresh_interval"`
+	CFile           string
 }
 
 type F struct {
@@ -20,6 +23,7 @@ type F struct {
 	directoryTo     *string
 	db              *string
 	refreshInterval *int
+	cFile           *string
 }
 
 var f F
@@ -32,6 +36,8 @@ func init() {
 	f.db = flag.String("d", "", "-d=db")
 	f.directoryTo = flag.String("t", "", "-t=to")
 	f.refreshInterval = flag.Int("r", 10, "interval of check")
+	f.cFile = flag.String("c", "", "config file")
+
 }
 
 func New() (c Config) {
@@ -57,6 +63,22 @@ func New() (c Config) {
 	c.DB = *f.db
 	c.DirectoryTo = *f.directoryTo
 	c.RefreshInterval = *f.refreshInterval
+	c.CFile = *f.cFile
+	file, err := os.Open(c.CFile)
+	if err != nil {
+		return
+	}
+	defer file.Close()
+
+	all, err := io.ReadAll(file)
+	if err != nil {
+		return
+	}
+
+	err = json.Unmarshal(all, &c)
+	if err != nil {
+		return
+	}
 	return c
 
 }
