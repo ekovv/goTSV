@@ -2,7 +2,6 @@ package service
 
 import (
 	"encoding/csv"
-	"fmt"
 	"github.com/signintech/gopdf"
 	"go.uber.org/zap"
 	"goTSV/config"
@@ -213,12 +212,12 @@ func (s *Service) WritePDF(tsv []shema.Tsv, unitGuid []string) error {
 func (s *Service) GetAll(r shema.Request) ([][]shema.Tsv, error) {
 	if r.Limit <= 0 || r.UnitGUID == "" || r.Page < 0 {
 		s.logger.Info("bad request in json")
-		return nil, fmt.Errorf("bad request in json")
+		return nil, constants.ErrBadRequest
 	}
 	tsvFromDB, err := s.storage.GetAllGuids(r.UnitGUID)
 	if err != nil {
 		s.logger.Info("can't get tsv from db")
-		return nil, err
+		return nil, constants.ErrNotFound
 	}
 	arrayWithPage := SubArray(r.Page, tsvFromDB)
 	var resultArray [][]shema.Tsv

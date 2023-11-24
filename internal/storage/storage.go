@@ -73,7 +73,7 @@ func (s *DBStorage) GetAllGuids(unitGuid string) ([]shema.Tsv, error) {
 	query := "SELECT number, mqtt, inventoryid, unitguid, messageid, messagetext, context, messageclass, level, area, address, block, type, bit, invertbit FROM occurrence WHERE unitguid = $1"
 	rows, err := s.conn.Query(query, unitGuid)
 	if err != nil {
-		return nil, fmt.Errorf("error getting: %w", err)
+		return nil, err
 	}
 	defer rows.Close()
 
