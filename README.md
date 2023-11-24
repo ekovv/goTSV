@@ -1,6 +1,6 @@
 # goTSV
 
-# 🔨 Description 🔨
+# 🔨 Description 
 
 Service for scanning directories with files in .tsv format and rewriting information into pdf files
 
