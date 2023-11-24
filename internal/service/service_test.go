@@ -1,58 +1,130 @@
 package service
 
-//
-//import (
-//	"goTSV/internal/shema"
-//	"testing"
-//)
-//
-//func TestService_ParseFile(t *testing.T) {
-//	tests := []struct {
-//		name      string
-//		args      string
-//		wantTsv   []shema.Tsv
-//		wantGuids []string
-//		wantErr   error
-//	}{
-//		{
-//			name:    "OK1",
-//			args:    "test.tsv",
-//			wantTsv: []shema.Tsv{},
-//			wantErr: nil,
-//		},
-//		{
-//			name: "BAD1",
-//			args: model.User{
-//				Username: "dima",
-//				Password: "test1",
-//				Session:  "ahsjufil12-fk",
-//			},
-//			sessionMock: func(c *mocks.SessionService, user model.User) {
-//				c.Mock.On("Generate").Return(user.Session, nil).Times(1)
-//			},
-//			repositoryMock: func(c *mocks.IRepository, user model.User) {
-//				c.Mock.On("CreateUser", user).Return(invalidErr).Times(1)
-//			},
-//			wantErr: invalidErr,
-//		},
-//	}
-//	for _, tt := range tests {
-//		t.Run(tt.name, func(t *testing.T) {
-//			storage := mocks.NewIRepository(t)
-//			session := mocks.NewSessionService(t)
-//			tt.repositoryMock(storage, tt.args)
-//			tt.sessionMock(session, tt.args)
-//			service := Service{
-//				database:       storage,
-//				sessionService: session,
-//			}
-//			cook, err := service.SignUp(tt.args)
-//			if !errors.Is(err, tt.wantErr) {
-//				t.Errorf("got %v, want %v", err, tt.wantErr)
-//			}
-//			if tt.wantErr == nil && cook != tt.args.Session {
-//				t.Errorf("got %s, want %s", cook, tt.args.Session)
-//			}
-//		})
-//	}
-//}
+import (
+	"encoding/csv"
+	"errors"
+	"goTSV/config"
+	"goTSV/internal/shema"
+	"os"
+	"reflect"
+	"testing"
+)
+
+func TestService_ParseFile(t *testing.T) {
+	type args struct {
+		file string
+		dir  string
+	}
+	tests := []struct {
+		name      string
+		args      args
+		wantTsv   []shema.Tsv
+		wantGuids []string
+		wantErr   error
+	}{
+		{
+			name: "OK#1",
+			args: args{dir: "testDirectory", file: "OK1.tsv"},
+			wantTsv: []shema.Tsv{
+				{
+					Number:       "5",
+					InventoryID:  "G-044325",
+					UnitGUID:     "01749246-95f6-57db-b7c3-2ae0e8be671f",
+					MessageID:    "cold78_Defrost_status",
+					MessageText:  "Разморозка",
+					MessageClass: "waiting",
+					Level:        "100",
+					Area:         "LOCAL",
+					Address:      "cold78_status.Defrost_status",
+				},
+			},
+			wantGuids: []string{
+				"01749246-9617-585e-9e19-157ccad61ee2",
+			},
+			wantErr: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tempDir, err := createTempDir(tt.args.dir, t)
+			if err != nil {
+				t.Errorf("not creating temp dir: %v", err)
+				return
+			}
+
+			file, err := createTempFile(tempDir, tt.args.file)
+			if err != nil {
+				t.Errorf("not creating temp file: %v", err)
+				return
+			}
+
+			err = writeDataToFile(file, tt.wantTsv)
+			if err != nil {
+				t.Errorf("not writing temp file: %v", err)
+				return
+			}
+
+			s := &Service{
+				config: config.Config{DirectoryFrom: tempDir},
+			}
+			tsv, guids, err := s.ParseFile(tt.args.file)
+
+			if !errors.Is(err, tt.wantErr) {
+				t.Errorf("ParseFile error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(tsv, tt.wantTsv) {
+				t.Errorf("Parse() got = %v, want %v", tsv, tt.wantTsv)
+			}
+			if !reflect.DeepEqual(guids, tt.wantGuids) {
+				t.Errorf("Parse() got1 = %v, want %v", guids, tt.wantGuids)
+			}
+			err = removeTempDir(tempDir)
+			if err != nil {
+				t.Errorf("not removing temp dir: %v", err)
+				return
+			}
+		})
+	}
+}
+
+func createTempDir(dir string, t *testing.T) (string, error) {
+	tempDir, err := os.MkdirTemp("", dir)
+	if err != nil {
+		t.Errorf("not created directory")
+		return "", err
+	}
+	return tempDir, nil
+}
+
+func createTempFile(dir, name string) (*os.File, error) {
+	tempFile, err := os.CreateTemp(dir, name)
+	if err != nil {
+		return nil, err
+	}
+	return tempFile, nil
+}
+
+func writeDataToFile(file *os.File, data []shema.Tsv) error {
+	writer := csv.NewWriter(file)
+	writer.Comma = '\t'
+
+	for _, d := range data {
+		record := []string{d.Number, d.MQTT, d.InventoryID, d.UnitGUID, d.MessageID, d.MessageText, d.Context,
+			d.MessageClass, d.Level, d.Area, d.Address, d.Block, d.Type, d.Bit, d.InvertBit}
+		if err := writer.Write(record); err != nil {
+			return err
+		}
+	}
+	writer.Flush()
+	return writer.Error()
+}
+
+func removeTempDir(dir string) error {
+	err := os.RemoveAll(dir)
+	if err != nil {
+		return err
+	}
+	return nil
+}
