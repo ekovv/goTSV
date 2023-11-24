@@ -20,7 +20,7 @@ Service for scanning directories with files in .tsv format and rewriting informa
 Request
 
 ```http
-POST http://localhost:8080/ HTTP/1.1
+POST http://localhost:8080/api/all HTTP/1.1
 Content-Type: application/json
 {
     "unit_guid": "01749246-95f6-57db-b7c3-2ae0e8be671f",
