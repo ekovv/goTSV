@@ -62,7 +62,7 @@ func (s *DBStorage) Save(sh shema.Tsv) error {
 }
 
 func (s *DBStorage) SaveFiles(sh shema.Files) error {
-	insertQuery := `INSERT INTO checkedfiles(name, error) VALUES ($1, $2)`
+	insertQuery := `INSERT INTO checkedfiles(name, error) VALUES ($1, $2) ON CONFLICT (name) DO NOTHING`
 	_, err := s.conn.Exec(insertQuery, sh.File, sh.Err)
 	if err != nil {
 		fmt.Errorf("not save in db %w", err)
