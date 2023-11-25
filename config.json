@@ -2,6 +2,6 @@
   "host": "localhost:8080",
   "dir_from": "From",
   "dir_to": "To",
-  "dsn": "postgres://bestuser:bestuser@localhost:5432/?sslmode=disable",
+  "dsn": "postgres://bestuser:bestuser@localhost:5432/...?sslmode=disable",
   "refresh_interval": 5
 }

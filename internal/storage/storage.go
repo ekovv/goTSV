@@ -89,6 +89,7 @@ func (s *DBStorage) GetAllGuids(unitGuid string) ([]shema.Tsv, error) {
 		}
 		data = append(data, d)
 	}
+
 	if err = rows.Err(); err != nil {
 		return nil, fmt.Errorf("error rows: %w", err)
 	}
