@@ -15,6 +15,16 @@ Service for scanning directories with files in .tsv format and rewriting informa
   "refresh_interval": 5
 }
 ```
+
+# 🏴‍☠️ Flags
+```
+a - ip for REST -a=host
+f - directory from -f="/User/..."
+t - drectory to -t="/User/..."
+d - connection string -d=connection string
+r - refresh interval of scan directory -r=1
+```
+
 # 📞 Request and Response
 
 Request
